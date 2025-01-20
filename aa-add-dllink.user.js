@@ -7,6 +7,7 @@
 // @grant        GM_xmlhttpRequest
 // @license      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
 // @updateURL    https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
+// @downloadURL    https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
 // @connect      annas-archive.org
 // ==/UserScript==
 
