@@ -3,9 +3,10 @@
 // @version      0.3
 // @description  Add download links from external sources (libgen, libgen rs, zlib) to Anna's Archive search results
 // @author       proItheus
-// @license      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
 // @match        https://annas-archive.org/search?q=*
 // @grant        GM_xmlhttpRequest
+// @license      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
+// @updateURL    https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
 // @connect      annas-archive.org
 // ==/UserScript==
 
