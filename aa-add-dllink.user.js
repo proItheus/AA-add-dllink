@@ -54,17 +54,14 @@
     if (item.classList.contains('processed')) return;
 
     item.classList.add('processed');
-    const itemPageURL = item.querySelector('a').href;
     const innerItem = item.querySelector('a');
+    const itemPageURL = innerItem.href;
 
     const links = await getDownloadLinks(itemPageURL);
-    let downloadSection = item.querySelector('.download-links');
 
-    if (!downloadSection) {
-      downloadSection = document.createElement('ul');
-      downloadSection.classList.add('download-links');
-      innerItem.appendChild(downloadSection);
-    }
+    let downloadSection = document.createElement('ul');
+    downloadSection.classList.add('download-links');
+    innerItem.appendChild(downloadSection);
 
     // Add download links to the section if they exist
     for (const [key, label] of Object.entries(downloadLinkLabels)) {
