@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add External Download Links to Anna's Archive
 // @version      0.3
-// @description  Add download links from external sources (libgen, libgen rs, zlib) to Anna's Archive search results
+// @description  Add download links from external sources (libgen li, libgen rs, zlib) to Anna's Archive search results
 // @author       proItheus
 // @match        https://annas-archive.org/search?q=*
 // @grant        GM_xmlhttpRequest
