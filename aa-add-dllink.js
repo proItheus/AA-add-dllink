@@ -1,4 +1,3 @@
-
 // ==UserScript==
 // @name         Add External Download Links to Anna's Archive
 // @version      0.3
