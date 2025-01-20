@@ -13,110 +13,84 @@
 (function () {
   'use strict';
 
-  // Function to extract download links from the individual item page
+  const downloadLinkLabels = {
+    libgen: 'Libgen',
+    libgenRs: 'Libgen RS',
+    zlib: 'Zlib'
+  };
+
+  // Extracts download links from the individual item page
   async function getDownloadLinks(itemPageURL) {
     const response = await fetch(itemPageURL);
     const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
 
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(html, "text/html");
     const links = Array.from(doc.querySelectorAll('.js-show-external.list-inside .js-download-link'));
 
-    const libgenLink = links.find(a => a.text.match(/Libgen\.li/))?.href;
-    const libgenRsLink = links.find(a => a.text.match(/Libgen\.rs/))?.href;
-    const zlibLink = links.find(a => a.text.match(/Z-Library/))?.href;
-
     return {
-      libgen: libgenLink || null,
-      libgenRs: libgenRsLink || null,
-      zlib: zlibLink || null
+      libgen: links.find(a => a.text.match(/Libgen\.li/))?.href || null,
+      libgenRs: links.find(a => a.text.match(/Libgen\.rs/))?.href || null,
+      zlib: links.find(a => a.text.match(/Z-Library/))?.href || null
     };
   }
 
-  function ishidden(node) {
-    return node.classList.contains('js-scroll-hidden')
+  // Checks if an item is hidden
+  function isItemHidden(item) {
+    return item.classList.contains('js-scroll-hidden');
   }
 
-  // Function to add download links to a specific item
-  function processItem(item) {
-    if (item.classList.contains('processed')) {
-      return; // Skip already processed items
-    }
-    item.classList.add('processed'); // Mark the item as processed
+  // Creates a list item for each available download link
+  function createDownloadLink(listSection, label, url) {
+    const listItem = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = url;
+    link.textContent = label;
+    listItem.appendChild(link);
+    listSection.appendChild(listItem);
+  }
 
-    const itemPageURL = item.querySelector('a').href; // Get the URL to the item's individual page
+  // Adds download links to the item
+  async function processItem(item) {
+    if (item.classList.contains('processed')) return;
+
+    item.classList.add('processed');
+    const itemPageURL = item.querySelector('a').href;
     const innerItem = item.querySelector('a');
 
-    getDownloadLinks(itemPageURL).then(links => {
-      let downloadSection = item.querySelector('.download-links'); // Create a section for the links
+    const links = await getDownloadLinks(itemPageURL);
+    let downloadSection = item.querySelector('.download-links');
 
-      if (!downloadSection) {
-        downloadSection = document.createElement('ul');
-        downloadSection.style.listStyleType = 'disc'; // Adds dots before list items
-        downloadSection.style.paddingLeft = '20px';  // Adds space before the list
-        downloadSection.classList.add('download-links');
-        innerItem.appendChild(downloadSection);
+    if (!downloadSection) {
+      downloadSection = document.createElement('ul');
+      downloadSection.classList.add('download-links');
+      innerItem.appendChild(downloadSection);
+    }
+
+    // Add download links to the section if they exist
+    for (const [key, label] of Object.entries(downloadLinkLabels)) {
+      if (links[key]) {
+        createDownloadLink(downloadSection, label, links[key]);
       }
-
-      // Prevent line-wrapping and allow text to be visible
-      downloadSection.style.whiteSpace = 'normal';  // Allow wrapping within the links
-      downloadSection.style.wordWrap = 'break-word'; // Break long words when necessary
-      downloadSection.style.wordBreak = 'break-all'; // Allow breaks in long words
-      downloadSection.style.display = 'flex'; // Make the section flexible
-      downloadSection.style.flexWrap = 'wrap'; // Wrap if necessary
-      downloadSection.style.gap = '5px'; // Add some space between the links
-
-      // Only add the links that exist
-      if (links.libgen) {
-        const listItem = document.createElement('li');
-        listItem.style.display = 'block';
-        const libgenLink = document.createElement('a');
-        listItem.appendChild(libgenLink);
-
-        libgenLink.href = links.libgen;
-        libgenLink.textContent = 'Libgen';
-        downloadSection.appendChild(listItem);
-      }
-      if (links.libgenRs) {
-        const listItem = document.createElement('li');
-        listItem.style.display = 'block';
-        const libgenRsLink = document.createElement('a');
-        listItem.appendChild(libgenRsLink);
-
-        libgenRsLink.href = links.libgenRs;
-        libgenRsLink.textContent = 'Libgen RS';
-        downloadSection.appendChild(listItem);
-      }
-      if (links.zlib) {
-        const listItem = document.createElement('li');
-        listItem.style.display = 'block';
-        const zlibLink = document.createElement('a');
-        listItem.appendChild(zlibLink);
-
-        zlibLink.href = links.zlib;
-        zlibLink.textContent = 'Zlib';
-        downloadSection.appendChild(listItem);
-      }
-    });
+    }
   }
 
-  // Run the function to process items and observe dynamic changes
+  // Initialize the script
   window.addEventListener('load', () => {
-    // Process existing items on page load
-    const newObserver = ()=> new MutationObserver((mutationsList, observer) => {
-      for (const mutation of mutationsList) {
-        let node = mutation.target;
-        if (!ishidden(node)) {
-          observer.disconnect();
-          processItem(node);
-          break;
-        }
+    // Process items on page load
+    document.querySelectorAll('#aarecord-list > div').forEach(item => {
+      if (isItemHidden(item)) {
+        new MutationObserver((mutationsList, observer) => {
+          for (const mutation of mutationsList) {
+            if (!isItemHidden(mutation.target)) {
+              observer.disconnect();
+              processItem(mutation.target);
+              break;
+            }
+          }
+        }).observe(item, { attributeFilter: ['class'] });
+      } else {
+        processItem(item);
       }
     });
-    document.querySelectorAll('#aarecord-list > div').forEach(item => {
-      if (ishidden(item)) { newObserver().observe(item, { attributeFilter: ['class'] }) }
-      else { processItem(item) }
-    });
-
   });
 })();
