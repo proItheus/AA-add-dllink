@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name         Add External Download Links to Anna's Archive
-// @version      1.0.1
+// @version      1.1.0
 // @description  Add download links from external sources (libgen li, libgen rs, zlib) to Anna's Archive search results
 // @author       proItheus
 // @match        https://annas-archive.org/search?q=*
 // @grant        GM_xmlhttpRequest
 // @license      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
 // @updateURL    https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
-// @downloadURL    https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
+// @downloadURL  https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
 // @connect      annas-archive.org
+// @run-at       document-idle
 // ==/UserScript==
 
 (function () {
@@ -73,22 +74,20 @@
   }
 
   // Initialize the script
-  window.addEventListener('load', () => {
-    // Process items on page load
-    document.querySelectorAll('#aarecord-list > div').forEach(item => {
-      if (isItemHidden(item)) {
-        new MutationObserver((mutationsList, observer) => {
-          for (const mutation of mutationsList) {
-            if (!isItemHidden(mutation.target)) {
-              observer.disconnect();
-              processItem(mutation.target);
-              break;
-            }
+  // Process items on page load
+  document.querySelectorAll('#aarecord-list > div').forEach(item => {
+    if (isItemHidden(item)) {
+      new MutationObserver((mutationsList, observer) => {
+        for (const mutation of mutationsList) {
+          if (!isItemHidden(mutation.target)) {
+            observer.disconnect();
+            processItem(mutation.target);
+            break;
           }
-        }).observe(item, { attributeFilter: ['class'] });
-      } else {
-        processItem(item);
-      }
-    });
-  });
+        }
+      }).observe(item, { attributeFilter: ['class'] });
+    } else {
+      processItem(item);
+    }
+  })
 })();
