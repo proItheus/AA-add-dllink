@@ -9,6 +9,10 @@
 // @updateURL    https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
 // @downloadURL  https://raw.githubusercontent.com/proItheus/AA-add-dllink/master/aa-add-dllink.user.js
 // @connect      annas-archive.org
+// @connect      libgen.li
+// @connect      libgen.rs
+// @connect      libgen.is
+// @connect      books.ms
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -16,24 +20,55 @@
   'use strict';
 
   const downloadLinkLabels = {
-    libgen: 'Libgen',
+    libgenli: 'Libgen Li',
     libgenRs: 'Libgen RS',
     zlib: 'Zlib'
   };
 
+  async function fetchPageAndParseDOM(url) {
+    const response = await new Promise((resolve, reject) =>{
+      GM_xmlhttpRequest({
+      url: url,
+      responseType: "document",
+      onload: resolve,
+      onerror: reject
+    })});
+    // const html = response.responseText;
+    // const doc = new DOMParser().parseFromString(html, "text/html");
+    const doc = response.responseXML;
+    return doc;
+  }
+
   // Extracts download links from the individual item page
   async function getDownloadLinks(itemPageURL) {
-    const response = await fetch(itemPageURL);
-    const html = await response.text();
-    const doc = new DOMParser().parseFromString(html, "text/html");
+    const doc = await fetchPageAndParseDOM(itemPageURL);
 
     const links = Array.from(doc.querySelectorAll('.js-show-external.list-inside .js-download-link'));
 
-    return {
-      libgen: links.find(a => a.text.match(/Libgen\.li/))?.href || null,
-      libgenRs: links.find(a => a.text.match(/Libgen\.rs/))?.href || null,
+    const result = {
+      libgenLi: await lgliGetDirectLink(links.find(a => a.text.match(/Libgen\.li/))?.href),
+      libgenRs: await lgrsGetDirectLink(links.find(a => a.text.match(/Libgen\.rs/))?.href),
       zlib: links.find(a => a.text.match(/Z-Library/))?.href || null
     };
+    return result;
+  }
+
+  async function lgliGetDirectLink(url) {
+    if (url) {
+      const doc = await fetchPageAndParseDOM(url);
+      const ele = doc.querySelector('a:has(>h2)');
+      return ele.href;
+    }
+  }
+
+  async function lgrsGetDirectLink(url) {
+    if (url) {
+      const doc = await fetchPageAndParseDOM(url);
+      const urlb = doc.querySelector('a:has(>img)')?.href ||
+            doc.querySelector('ul.record_mirrors a')?.href || console.log(url,doc);
+      const docb = await fetchPageAndParseDOM(urlb);
+      return docb.querySelector('#download a')?.href || console.log(urlb,docb);
+    }
   }
 
   // Checks if an item is hidden
